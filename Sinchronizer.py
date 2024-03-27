@@ -7,6 +7,7 @@ from loguru import logger
 from time import sleep
 import requests
 import service
+import http
 import sys
 import os
 
@@ -55,7 +56,7 @@ class Sinchronizer:
         try:
             response = self.isinstance_virtual_dir()
 
-            if response.status_code not in [200, 201, 202]:
+            if response.status_code != http.HTTPStatus.OK:
                 response = requests.put(
                     url=self.url + self.links["resources"],
                     headers=self.auth_headers,
@@ -71,7 +72,7 @@ class Sinchronizer:
             logger_01.info("[+] Ожидаю следующего периода синхронизации...")
             return False
 
-        if response.status_code == 201:
+        if response.status_code != http.HTTPStatus.OK:
             logger_01.info(
                 f"[+] Рабочая директория [{self.dir_virtual}] в облачном хранилище успешно создана"
             )
@@ -107,7 +108,7 @@ class Sinchronizer:
         head: int = 0
         tail: int = len(files)
 
-        if self.isinstance_virtual_dir().status_code not in [200, 201, 202]:
+        if self.isinstance_virtual_dir().status_code != http.HTTPStatus.OK:
             logger_01.info(
                 f"[-] Отсутствует виртуальная директория [{self.dir_virtual}], приступаю к созданию"
             )
@@ -130,7 +131,7 @@ class Sinchronizer:
                     params=self.files_params_upload,
                 )
 
-                if get_upload_link.status_code in [200, 201, 202]:
+                if get_upload_link.status_code == http.HTTPStatus.OK:
                     upload_url = get_upload_link.json()["href"]
                     requests.post(url=upload_url, files=data)
                     logger_01.info(
@@ -166,7 +167,7 @@ class Sinchronizer:
         head: int = 0
         tail: int = len(files)
 
-        if self.isinstance_virtual_dir().status_code not in [200, 201, 202]:
+        if self.isinstance_virtual_dir().status_code != http.HTTPStatus.OK:
             logger_01.info(
                 f"[-] Отсутствует виртуальная директория [{self.dir_virtual}], приступаю к созданию"
             )
@@ -189,7 +190,7 @@ class Sinchronizer:
                     params=copy_for_overwrite,
                 )
 
-                if get_upload_link.status_code in [200, 201, 202]:
+                if get_upload_link.status_code == http.HTTPStatus.OK:
                     upload_url = get_upload_link.json()["href"]
                     requests.post(url=upload_url, files=data)
                     logger_01.info(
@@ -234,7 +235,7 @@ class Sinchronizer:
                     params=self.files_params_delete,
                 )
 
-                if response.status_code in [200, 202, 204]:
+                if response.status_code == http.HTTPStatus.NO_CONTENT:
                     logger_01.info(f"[+] Файл [{file}] успешно удален")
 
                 else:
@@ -274,7 +275,7 @@ class Sinchronizer:
             logger_01.info("[+] Ожидаю следующего периода синхронизации...")
             return
 
-        if response.status_code != 200:
+        if response.status_code != http.HTTPStatus.OK:
             logger_01.error("[-] Ответ сервера вернулся с ошибкой. Данные не получены")
             return
 
